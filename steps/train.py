@@ -27,10 +27,10 @@ n_estimators = args.n_estimators
 
 run = Run.get_context()
 
-path = os.path.join(training_data + 'data.csv')
+path = os.path.join(training_data, 'data.csv')
 df = pd.read_csv(path)
 
-X, y = df.drop('SalePrice').values, df['SalePrice'].values
+X, y = df.drop('SalePrice', axis='columns').values, df['SalePrice'].values
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, train_size=0.7, random_state=0)

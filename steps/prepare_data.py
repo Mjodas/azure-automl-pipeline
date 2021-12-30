@@ -1,6 +1,7 @@
 import argparse
 import os
 
+import numpy as np
 from azureml.core import Run
 from sklearn.preprocessing import MinMaxScaler
 
@@ -18,15 +19,17 @@ save_folder = args.prepared_data
 run = Run.get_context()
 
 house_prices = run.input_datasets['raw_data'].to_pandas_dataframe()
-house_prices = house_prices.drop('Id')
+house_prices = house_prices.drop('Id', axis='columns')
+house_prices = house_prices.dropna()
 
 labels = house_prices['SalePrice']
 
 # Being lazy, skipping all string columns. 
-features = house_prices.select_dtypes(exclude=['str'])
+features = house_prices.select_dtypes(include=[np.number])
 
 scaler = MinMaxScaler()
-features = scaler.fit_transform(features)
+columns = features.columns
+features[columns] = scaler.fit_transform(features)
 
 house_prices = features
 house_prices['SalePrice'] = labels

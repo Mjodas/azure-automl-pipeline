@@ -12,17 +12,18 @@ ws = Workspace.from_config()
 cluster_name = 'mjodas1'
 environment_name = 'AzureML-sklearn-1.0-ubuntu20.04-py38-cpu'
 
-experiment_folder = 'house_price_pipeline'
-os.makedirs(experiment_folder, exist_ok=True)
 
 # Get cluster
 try:
-    cluster = ComputeTarget(ws, cluster_name=cluster_name)
+    cluster = ComputeTarget(ws, name=cluster_name)
 except Exception as e:
     print(e)
 
 # Get prebuilt environment
 environment = Environment.get(ws, name=environment_name)
+
+print(type(environment))
+print(environment)
 
 # Create a new runconfig object for the pipeline
 pipeline_run_config = RunConfiguration()
@@ -37,18 +38,18 @@ prepped_data = OutputFileDatasetConfig('prepped_data')
 # Crete pipeline steps
 
 prep_step = PythonScriptStep(name="Prepare Data",
-                             source_directory=experiment_folder,
-                             script_name="prep_diabetes.py",
+                             source_directory='steps',
+                             script_name="prepare_data.py",
                              arguments=['--input-data', house_prices.as_named_input('raw_data'),
-                                        '--prepped-data', prepped_data],
+                                        '--prepared-data', prepped_data],
                              compute_target=cluster,
                              runconfig=pipeline_run_config,
                              allow_reuse=True)
 
 
 train_step = PythonScriptStep(name="Train and Register Model",
-                              source_directory=experiment_folder,
-                              script_name="train_diabetes.py",
+                              source_directory='steps',
+                              script_name="train.py",
                               arguments=['--training-data',
                                          prepped_data.as_input()],
                               compute_target=cluster,
@@ -61,6 +62,5 @@ pipeline = Pipeline(ws, steps=steps)
 
 # Create and submit experiment
 experiment = Experiment(ws, name='house-prices-normalized-gbr')
-run = experiment.submit(pipeline_run_config, regenerate_outputs=True)
-RunDetails(run).show()
-run.wait_for_completion(show_outputs=True)
+run = experiment.submit(pipeline, regenerate_outputs=True)
+run.wait_for_completion()

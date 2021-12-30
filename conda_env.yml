@@ -1,0 +1,12 @@
+name: azureml
+dependencies:
+- python=3.7.7
+- scikit-learn
+- pandas
+- pip
+- pip:
+  - azureml-core
+  - azureml-pipeline-core
+  - azureml-pipeline-steps
+  - azureml-widgets
+
